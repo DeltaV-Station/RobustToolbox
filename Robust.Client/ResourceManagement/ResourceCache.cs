@@ -4,6 +4,7 @@ using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using Robust.Client.Graphics.Clyde;
 using Robust.Client.Audio;
 using Robust.Shared.ContentPack;
 using Robust.Shared.IoC;
@@ -42,6 +43,12 @@ internal sealed partial class ResourceCache : ResourceManager, IResourceCacheInt
             resource.Load(dependencies, path);
             cache[path] = resource;
             return resource;
+        }
+        catch (ShaderCompilationException e)
+        {
+            Logger.Error(
+                $"Shader compilation Exception while loading resource {typeof(T)} at '{path}', {e.InnerException?.Message}\n{e}");
+            throw;
         }
         catch (Exception e)
         {

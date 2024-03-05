@@ -2,6 +2,9 @@ using System.Numerics;
 using JetBrains.Annotations;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Serialization.Manager.Attributes;
+using Robust.Shared.Serialization.TypeSerializers.Implementations;
+using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Graphics
 {
@@ -64,5 +67,34 @@ namespace Robust.Shared.Graphics
         void GetViewMatrixInv(out Matrix3 viewMatrixInv, Vector2 renderScale);
 
         void GetViewMatrixNoOffset(out Matrix3 viewMatrix, Vector2 renderScale);
+
+        /// <summary>
+        /// How much we should brighten lights around the player. 1.0 is default brightness
+        ///   This is a multiplier to light power and it also increases range by sqrt(Exposure) as per light laws..
+        /// </summary>
+        float Exposure { get; set; }
+
+        /// <summary>
+        /// Renderer measurement of light intensity last frame. 0.1 is dark, 1.0 is extremely bright.
+        ///   The renderer measures a tiny square in the very centre of the viewport.
+        ///   Note that this is after exposure is applied, so adjusting exposure each frame to keep this around
+        ///   50-70% makes sense.
+        /// </summary>
+        float LastBrightness { get; set; }
+
+        /// <summary>
+        /// Set true if you want to use LastBrightness.
+        ///   The renderer will read the lighting texture and calculate it for you each frame.
+        /// </summary>
+        bool MeasureBrightness { get; set; }
+
+        /// <summary>
+        /// Lighting over 100% is compressed by taking sqrt and then multiplying by this value.
+        ///   A value like 0.5 looks nice, 0.05 crushes bright light down to near-fullbright.
+        ///   0.0 crushes it to exactly fullbright, which is bland.
+        /// Important when there are LOT of lightsources, or they are powerful, or Exposure is high.
+        /// </summary>
+        float LightIntolerance { get; set; }
+
     }
 }

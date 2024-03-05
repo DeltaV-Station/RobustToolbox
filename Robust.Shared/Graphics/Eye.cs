@@ -3,6 +3,7 @@
 using System.Numerics;
 using Robust.Shared.Map;
 using Robust.Shared.Maths;
+using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.ViewVariables;
 
 namespace Robust.Shared.Graphics
@@ -89,5 +90,23 @@ namespace Robust.Shared.Graphics
                 1 / (_scale.X * renderScale.X),
                 1 / (_scale.Y * renderScale.Y));
         }
+
+
+        /// <inheritdoc />
+        [ViewVariables(VVAccess.ReadWrite)]
+        public float Exposure { get; set; } = 1.0f;
+
+        /// <inheritdoc />
+        [ViewVariables(VVAccess.ReadOnly)]
+        public float LastBrightness { get; set; } = 1.0f;
+
+        /// <inheritdoc />
+        [ViewVariables(VVAccess.ReadWrite)]
+        public bool MeasureBrightness { get; set; } = false;
+
+        /// <inheritdoc />
+        [ViewVariables(VVAccess.ReadWrite)]
+        public float LightIntolerance { get; set; } = 0.5f;
+
     }
 }

@@ -34,6 +34,7 @@ namespace Robust.Client.Graphics.Clyde
 
         public void Render()
         {
+            CheckTransferringLights();
             CheckTransferringScreenshots();
 
             var allMinimized = true;
@@ -546,6 +547,11 @@ namespace Robust.Client.Graphics.Clyde
                 using (_prof.Group("Overlays WS"))
                 {
                     RenderOverlays(viewport, OverlaySpace.WorldSpace, worldAABB, worldBounds);
+                }
+
+                using (_prof.Group("MeasureBrightness"))
+                {
+                    MeasureBrightness(viewport);
                 }
 
                 _currentViewport = oldVp;

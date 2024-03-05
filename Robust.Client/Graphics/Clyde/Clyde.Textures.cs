@@ -155,6 +155,7 @@ namespace Robust.Client.Graphics.Clyde
             var pixelType = typeof(T);
             var texPixType = GetTexturePixelType<T>();
             var isActuallySrgb = false;
+            var format = new TextureFormat(pif, pf, pt);
 
             if (pixelType == typeof(Rgba32))
             {
@@ -199,7 +200,7 @@ namespace Robust.Client.Graphics.Clyde
 
             var pressureEst = EstPixelSize(pif) * width * height;
 
-            return GenTexture(texture, (width, height), isActuallySrgb, name, texPixType, pressureEst);
+            return GenTexture(texture, (width, height), isActuallySrgb, name, texPixType, format, pressureEst);
         }
 
         private void ApplySampleParameters(TextureSampleParameters? sampleParameters)
@@ -286,6 +287,7 @@ namespace Robust.Client.Graphics.Clyde
             bool srgb,
             string? name,
             TexturePixelType pixType,
+            TextureFormat format,
             long memoryPressure = 0)
         {
             if (name != null)
@@ -296,7 +298,7 @@ namespace Robust.Client.Graphics.Clyde
             var (width, height) = size;
 
             var id = AllocRid();
-            var instance = new ClydeTexture(id, size, srgb, this);
+            var instance = new ClydeTexture(id, size, srgb, this, format);
             var loaded = new LoadedTexture
             {
                 OpenGLObject = glHandle,
@@ -593,6 +595,7 @@ namespace Robust.Client.Graphics.Clyde
             L8,
         }
 
+        public record struct TextureFormat(PIF internalFormat, PF pixFormat, PT pixType);
         private void FlushTextureDispose()
         {
             while (_textureDisposeQueue.TryDequeue(out var handle))
@@ -605,6 +608,7 @@ namespace Robust.Client.Graphics.Clyde
         {
             private readonly Clyde _clyde;
             public readonly bool IsSrgb;
+            public readonly TextureFormat Format;
 
             internal ClydeHandle TextureId { get; }
 
@@ -632,11 +636,12 @@ namespace Robust.Client.Graphics.Clyde
                 }
             }
 
-            internal ClydeTexture(ClydeHandle id, Vector2i size, bool srgb, Clyde clyde) : base(size)
+            internal ClydeTexture(ClydeHandle id, Vector2i size, bool srgb, Clyde clyde, TextureFormat format) : base(size)
             {
                 TextureId = id;
                 IsSrgb = srgb;
                 _clyde = clyde;
+                Format = format;
             }
 
             public override string ToString()
@@ -656,17 +661,89 @@ namespace Robust.Client.Graphics.Clyde
                     throw new DataException("Texture not found");
                 }
 
-                Span<byte> rgba = stackalloc byte[4*this.Size.X*this.Size.Y];
-                unsafe
+                if (Format.pixType == PT.Float)
                 {
-                    fixed (byte* p = rgba)
+                    Span<float> rgba = stackalloc float[4];
+                    unsafe
                     {
+                        fixed (float* p = rgba)
+                        {
 
-                        GL.GetTextureImage(loaded.OpenGLObject.Handle, 0, PF.Rgba, PT.UnsignedByte, 4*this.Size.X*this.Size.Y, (IntPtr) p);
+                            GL.GetTextureSubImage(loaded.OpenGLObject.Handle, 0, x, y, 0, 1, 1, 1, Format.pixFormat, Format.pixType, 4 * sizeof(float), (IntPtr) p);
+                        }
                     }
+                    return new Color(rgba[0], rgba[1], rgba[2], rgba[3]);
+
                 }
-                int pixelPos = (this.Size.X*(this.Size.Y-y) + x)*4;
-                return new Color(rgba[pixelPos+0], rgba[pixelPos+1], rgba[pixelPos+2], rgba[pixelPos+3]);
+                else // Assume unsigned byte
+                {
+                    Span<byte> rgba = stackalloc byte[4];
+                    unsafe
+                    {
+                        fixed (byte* p = rgba)
+                        {
+
+                            GL.GetTextureSubImage(loaded.OpenGLObject.Handle, 0, x, y, 0, 1, 1, 1, Format.pixFormat, Format.pixType, 4, (IntPtr) p);
+                        }
+                    }
+                    return new Color(rgba[0], rgba[1], rgba[2], rgba[3]);
+                }
+            }
+
+            public Color MeasureBrightness(int x, int y, int width, int height)
+            {
+                if (!_clyde._loadedTextures.TryGetValue(TextureId, out var loaded))
+                {
+                    throw new DataException("Texture not found");
+                }
+
+                if (Format.pixType == PT.Float)
+                {
+                    var stride = Format.pixFormat == PF.Rgb ? 3 : 4;
+                    Span<float> rgba = stackalloc float[stride * width * height];
+                    unsafe
+                    {
+                        fixed (float* p = rgba)
+                        {
+                            GL.GetTextureSubImage(loaded.OpenGLObject.Handle, 0, x, y, 0, width, height, 1, Format.pixFormat, Format.pixType, rgba.Length * sizeof(float), (IntPtr) p);
+                        }
+                    }
+                    // int pixelPos = (this.Size.X*(this.Size.Y-y) + x)*4;
+                    var accum = new Color();
+                    for (int i = 0; i < rgba.Length; i+=stride)
+                    {
+                        accum.R += rgba[i + 0];
+                        accum.G += rgba[i + 1];
+                        accum.B += rgba[i + 2];
+                    }
+
+                    var divisor = (1.0f / (float)(width * height));
+                    return accum * new Color(divisor, divisor, divisor, divisor);
+                }
+                else // Assume unsigned byte
+                {
+                    var stride = Format.pixFormat == PF.Rgb ? 3 : 4;
+                    Span<byte> rgba = stackalloc byte[stride * width * height];
+                    unsafe
+                    {
+                        fixed (byte* p = rgba)
+                        {
+
+                            GL.GetTextureSubImage(loaded.OpenGLObject.Handle, 0, x, y, 0, width, height, 1, Format.pixFormat, Format.pixType, rgba.Length, (IntPtr) p);
+                        }
+                    }
+                    // int pixelPos = (this.Size.X*(this.Size.Y-y) + x)*4;
+                    var accum = new Color();
+                    for (int i = 0; i < rgba.Length; i+=stride)
+                    {
+                        accum.R += rgba[i + 0];
+                        accum.G += rgba[i + 1];
+                        accum.B += rgba[i + 2];
+                    }
+
+                    var divisor = (1.0f / (float)(width * height * 255.0f));
+                    return accum * new Color(divisor, divisor, divisor, divisor);
+                }
             }
         }
 
