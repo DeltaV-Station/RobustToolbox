@@ -1,6 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Runtime.CompilerServices;
+using Arch.Core.Utils;
+using Collections.Pooled;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
 using Robust.Shared.Localization;
@@ -12,6 +15,7 @@ using Robust.Shared.Serialization.Manager.Attributes;
 using Robust.Shared.Serialization.Markdown.Mapping;
 using Robust.Shared.Serialization.TypeSerializers.Implementations.Custom.Prototype.Array;
 using Robust.Shared.ViewVariables;
+using Component = Robust.Shared.GameObjects.Component;
 
 namespace Robust.Shared.Prototypes
 {
@@ -196,13 +200,15 @@ namespace Robust.Shared.Prototypes
         internal static void LoadEntity(
             Entity<MetaDataComponent> ent,
             IComponentFactory factory,
-            IEntityManager entityManager,
+            EntityManager entityManager,
             ISerializationManager serManager,
             IEntityLoadContext? context) //yeah officer this method right here
         {
-            var (entity, meta) = ent;
+            var meta = ent.Comp;
             var prototype = meta.EntityPrototype;
             var ctx = context as ISerializationContext;
+            using var compTypes = new PooledList<ComponentType>();
+            using var addComps = new PooledList<IComponent>();
 
             if (prototype != null)
             {
@@ -213,10 +219,16 @@ namespace Robust.Shared.Prototypes
 
                     var fullData = context != null && context.TryGetComponent(name, out var data) ? data : entry.Component;
                     var compReg = factory.GetRegistration(name);
-                    EnsureCompExistsAndDeserialize(entity, compReg, factory, entityManager, serManager, name, fullData, ctx);
+                    var (comp, add) = EnsureCompExistsAndDeserialize(ent, compReg, factory, entityManager, serManager, name, fullData, ctx);
 
                     if (!entry.Component.NetSyncEnabled && compReg.NetID is {} netId)
                         meta.NetComponents.Remove(netId);
+
+                    if (add)
+                    {
+                        compTypes.Add(compReg.Type);
+                        addComps.Add(comp);
+                    }
                 }
             }
 
@@ -239,12 +251,29 @@ namespace Robust.Shared.Prototypes
                     }
 
                     var compReg = factory.GetRegistration(name);
-                    EnsureCompExistsAndDeserialize(entity, compReg, factory, entityManager, serManager, name, data, ctx);
+                    var (comp, add) = EnsureCompExistsAndDeserialize(ent, compReg, factory, entityManager, serManager, name, data, ctx);
+
+                    if (add)
+                    {
+                        compTypes.Add(compReg.Type);
+                        addComps.Add(comp);
+                    }
+                }
+            }
+
+            // Avoid archetype changes and do it all at once.
+            if (addComps.Count > 0)
+            {
+                entityManager.AddComponentRange(ent.Owner, compTypes);
+
+                foreach (var comp in addComps)
+                {
+                    entityManager.AddComponent(ent.Owner, comp, ent.Comp);
                 }
             }
         }
 
-        public static void EnsureCompExistsAndDeserialize(EntityUid entity,
+        public static (IComponent Comp, bool Add) EnsureCompExistsAndDeserialize(Entity<MetaDataComponent> entity,
             ComponentRegistration compReg,
             IComponentFactory factory,
             IEntityManager entityManager,
@@ -253,22 +282,26 @@ namespace Robust.Shared.Prototypes
             IComponent data,
             ISerializationContext? context)
         {
+            bool add = false;
+
             if (!entityManager.TryGetComponent(entity, compReg.Idx, out var component))
             {
                 var newComponent = factory.GetComponent(compName);
-                entityManager.AddComponent(entity, newComponent);
+                newComponent.Owner = entity;
                 component = newComponent;
+                add = true;
             }
 
             if (context is not MapSerializationContext map)
             {
                 serManager.CopyTo(data, ref component, context, notNullableOverride: true);
-                return;
+                return (component, add);
             }
 
             map.CurrentComponent = compName;
             serManager.CopyTo(data, ref component, context, notNullableOverride: true);
             map.CurrentComponent = null;
+            return (component, add);
         }
 
         public override string ToString()

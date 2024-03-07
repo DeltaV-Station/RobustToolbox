@@ -43,7 +43,10 @@ public abstract partial class SharedMapSystem
         args.State = new MapComponentState(component.MapId, component.LightingEnabled, component.MapPaused);
     }
 
-    protected abstract void OnMapAdd(EntityUid uid, MapComponent component, ComponentAdd args);
+    protected virtual void OnMapAdd(EntityUid uid, MapComponent component, ComponentAdd args)
+    {
+
+    }
 
     private void OnMapInit(EntityUid uid, MapComponent component, ComponentInit args)
     {

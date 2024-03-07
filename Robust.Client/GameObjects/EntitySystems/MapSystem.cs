@@ -1,6 +1,5 @@
 using Robust.Client.Graphics;
 using Robust.Client.Map;
-using Robust.Client.Physics;
 using Robust.Client.ResourceManagement;
 using Robust.Shared.GameObjects;
 using Robust.Shared.IoC;
