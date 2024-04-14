@@ -36,6 +36,8 @@ END TEMPLATE-->
 ### Breaking changes
 
 * `Robust.Shared.Configuration.EnvironmentVariables` is now internal and no longer usable by content.
+* `GrammarComponent` now has access so you must use `GrammarSystem`.
+* `GrammarComponent` has been moved to `Robust.Shared.GameObjects`.
 
 ### New features
 
