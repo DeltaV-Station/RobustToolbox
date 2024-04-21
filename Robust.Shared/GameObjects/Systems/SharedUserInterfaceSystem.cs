@@ -11,9 +11,14 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
 {
     protected readonly Dictionary<ICommonSession, List<PlayerBoundUserInterface>> OpenInterfaces = new();
 
+    private EntityQuery<UserInterfaceComponent> _uiQuery;
+
     public override void Initialize()
     {
         base.Initialize();
+
+        _uiQuery = GetEntityQuery<UserInterfaceComponent>();
+
         SubscribeAllEvent<PredictedBoundUIWrapMessage>(OnMessageReceived);
         SubscribeLocalEvent<UserInterfaceComponent, ComponentInit>(OnUserInterfaceInit);
         SubscribeLocalEvent<UserInterfaceComponent, ComponentShutdown>(OnUserInterfaceShutdown);
@@ -47,7 +52,7 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
     {
         var uid = GetEntity(msg.Entity);
 
-        if (!TryComp(uid, out UserInterfaceComponent? uiComp) || args.SenderSession is not { } session)
+        if (!_uiQuery.TryComp(uid, out var uiComp) || args.SenderSession is not { } session)
             return;
 
         if (!uiComp.Interfaces.TryGetValue(msg.UiKey, out var ui))
@@ -117,11 +122,58 @@ public abstract class SharedUserInterfaceSystem : EntitySystem
         ent.Comp.MappedInterfaceData[data.UiKey] = data;
     }
 
+    /// <summary>
+    /// Tries to get the BUI if it's on the entity at all.
+    /// </summary>
     public bool TryGetUi(EntityUid uid, Enum uiKey, [NotNullWhen(true)] out PlayerBoundUserInterface? bui, UserInterfaceComponent? ui = null)
     {
         bui = null;
 
-        return Resolve(uid, ref ui, false) && ui.Interfaces.TryGetValue(uiKey, out bui);
+        return _uiQuery.Resolve(uid, ref ui, false) && ui.Interfaces.TryGetValue(uiKey, out bui);
+    }
+
+    /// <summary>
+    /// Tries to get the BUIs if it's castable to the specified type.
+    /// </summary>
+    public IEnumerable<T> GetUis<T>(EntityUid uid, UserInterfaceComponent? ui = null)
+    {
+        if (!_uiQuery.Resolve(uid, ref ui, false))
+            yield break;
+
+        foreach (var bui in ui.Interfaces.Values)
+        {
+            if (bui is not T cast)
+                continue;
+
+            yield return cast;
+        }
+    }
+
+    /// <summary>
+    /// Tries to get the BUI if it is currently open.
+    /// </summary>
+    public bool TryGetOpenUi(EntityUid uid, Enum uiKey, [NotNullWhen(true)] out BoundUserInterface? bui, UserInterfaceComponent? ui = null)
+    {
+        bui = null;
+
+        return _uiQuery.Resolve(uid, ref ui, false) && ui.OpenInterfaces.TryGetValue(uiKey, out bui);
+    }
+
+    /// <summary>
+    /// Tries to get the open BUIs if it's castable to the specified type.
+    /// </summary>
+    public IEnumerable<T> GetOpenUis<T>(EntityUid uid, UserInterfaceComponent? ui = null)
+    {
+        if (!_uiQuery.Resolve(uid, ref ui, false))
+            yield break;
+
+        foreach (var bui in ui.OpenInterfaces.Values)
+        {
+            if (bui is not T cast)
+                continue;
+
+            yield return cast;
+        }
     }
 
     /// <summary>
