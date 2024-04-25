@@ -793,6 +793,7 @@ namespace Robust.Client.GameObjects
             }
 
             layer.RenderingStrategy = layerDatum.RenderingStrategy ?? layer.RenderingStrategy;
+            layer.DrawDepth = layerDatum.DrawDepth ?? layer.DrawDepth;
             layer.Cycle = layerDatum.Cycle;
 
             layer.Color = layerDatum.Color ?? layer.Color;
@@ -1635,6 +1636,9 @@ namespace Robust.Client.GameObjects
             [ViewVariables]
             public LayerRenderingStrategy RenderingStrategy = LayerRenderingStrategy.UseSpriteStrategy;
 
+            [ViewVariables]
+            public int? DrawDepth { get; set; }
+
             public Layer(SpriteComponent parent)
             {
                 _parent = parent;
@@ -1663,6 +1667,7 @@ namespace Robust.Client.GameObjects
                 DirOffset = toClone.DirOffset;
                 _autoAnimated = toClone._autoAnimated;
                 RenderingStrategy = toClone.RenderingStrategy;
+                DrawDepth = toClone.DrawDepth;
             }
 
             void ISerializationHooks.AfterDeserialization()
@@ -1691,6 +1696,7 @@ namespace Robust.Client.GameObjects
                     Visible = Visible,
                     RsiPath = RSI?.Path.CanonPath,
                     RenderingStrategy = RenderingStrategy,
+                    DrawDepth = DrawDepth,
                     //todo TexturePath = Textur
                     //todo MapKeys
                 };
