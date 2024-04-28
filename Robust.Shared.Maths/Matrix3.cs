@@ -718,22 +718,22 @@ namespace Robust.Shared.Maths
             result.R2C2 = left.R2C2 - right.R2C2;
         }
 
-        /// <summary>Multiply left matrix times this matrix.</summary>
-        /// <param name="matrix">The matrix to multiply.</param>
+        /// <summary>Left-multiply input matrix by this matrix. this = a * this</summary>
+        /// <param name="a">The matrix to multiply.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public void Multiply(in Matrix3 matrix)
+        public void Multiply(in Matrix3 a)
         {
-            var r0c0 = matrix.R0C0 * R0C0 + matrix.R0C1 * R1C0 + matrix.R0C2 * R2C0;
-            var r0c1 = matrix.R0C0 * R0C1 + matrix.R0C1 * R1C1 + matrix.R0C2 * R2C1;
-            var r0c2 = matrix.R0C0 * R0C2 + matrix.R0C1 * R1C2 + matrix.R0C2 * R2C2;
+            var r0c0 = a.R0C0 * R0C0 + a.R0C1 * R1C0 + a.R0C2 * R2C0;
+            var r0c1 = a.R0C0 * R0C1 + a.R0C1 * R1C1 + a.R0C2 * R2C1;
+            var r0c2 = a.R0C0 * R0C2 + a.R0C1 * R1C2 + a.R0C2 * R2C2;
 
-            var r1c0 = matrix.R1C0 * R0C0 + matrix.R1C1 * R1C0 + matrix.R1C2 * R2C0;
-            var r1c1 = matrix.R1C0 * R0C1 + matrix.R1C1 * R1C1 + matrix.R1C2 * R2C1;
-            var r1c2 = matrix.R1C0 * R0C2 + matrix.R1C1 * R1C2 + matrix.R1C2 * R2C2;
+            var r1c0 = a.R1C0 * R0C0 + a.R1C1 * R1C0 + a.R1C2 * R2C0;
+            var r1c1 = a.R1C0 * R0C1 + a.R1C1 * R1C1 + a.R1C2 * R2C1;
+            var r1c2 = a.R1C0 * R0C2 + a.R1C1 * R1C2 + a.R1C2 * R2C2;
 
-            R2C0 = matrix.R2C0 * R0C0 + matrix.R2C1 * R1C0 + matrix.R2C2 * R2C0;
-            R2C1 = matrix.R2C0 * R0C1 + matrix.R2C1 * R1C1 + matrix.R2C2 * R2C1;
-            R2C2 = matrix.R2C0 * R0C2 + matrix.R2C1 * R1C2 + matrix.R2C2 * R2C2;
+            R2C0 = a.R2C0 * R0C0 + a.R2C1 * R1C0 + a.R2C2 * R2C0;
+            R2C1 = a.R2C0 * R0C1 + a.R2C1 * R1C1 + a.R2C2 * R2C1;
+            R2C2 = a.R2C0 * R0C2 + a.R2C1 * R1C2 + a.R2C2 * R2C2;
 
             R0C0 = r0c0;
             R0C1 = r0c1;
@@ -744,39 +744,39 @@ namespace Robust.Shared.Maths
             R1C2 = r1c2;
         }
 
-        /// <summary>Multiply matrix times this matrix.</summary>
-        /// <param name="matrix">The matrix to multiply.</param>
-        /// <param name="result">The resulting matrix of the multiplication.</param>
+        /// <summary>Left-multiply input matrix times this matrix.</summary>
+        /// <param name="a">The matrix to multiply.</param>
+        /// <param name="result">The resulting matrix of the multiplication. result = a * this</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public readonly void Multiply(in Matrix3 matrix, out Matrix3 result)
+        public readonly void Multiply(in Matrix3 a, out Matrix3 result)
         {
-            result.R0C0 = matrix.R0C0 * R0C0 + matrix.R0C1 * R1C0 + matrix.R0C2 * R2C0;
-            result.R0C1 = matrix.R0C0 * R0C1 + matrix.R0C1 * R1C1 + matrix.R0C2 * R2C1;
-            result.R0C2 = matrix.R0C0 * R0C2 + matrix.R0C1 * R1C2 + matrix.R0C2 * R2C2;
-            result.R1C0 = matrix.R1C0 * R0C0 + matrix.R1C1 * R1C0 + matrix.R1C2 * R2C0;
-            result.R1C1 = matrix.R1C0 * R0C1 + matrix.R1C1 * R1C1 + matrix.R1C2 * R2C1;
-            result.R1C2 = matrix.R1C0 * R0C2 + matrix.R1C1 * R1C2 + matrix.R1C2 * R2C2;
-            result.R2C0 = matrix.R2C0 * R0C0 + matrix.R2C1 * R1C0 + matrix.R2C2 * R2C0;
-            result.R2C1 = matrix.R2C0 * R0C1 + matrix.R2C1 * R1C1 + matrix.R2C2 * R2C1;
-            result.R2C2 = matrix.R2C0 * R0C2 + matrix.R2C1 * R1C2 + matrix.R2C2 * R2C2;
+            result.R0C0 = a.R0C0 * R0C0 + a.R0C1 * R1C0 + a.R0C2 * R2C0;
+            result.R0C1 = a.R0C0 * R0C1 + a.R0C1 * R1C1 + a.R0C2 * R2C1;
+            result.R0C2 = a.R0C0 * R0C2 + a.R0C1 * R1C2 + a.R0C2 * R2C2;
+            result.R1C0 = a.R1C0 * R0C0 + a.R1C1 * R1C0 + a.R1C2 * R2C0;
+            result.R1C1 = a.R1C0 * R0C1 + a.R1C1 * R1C1 + a.R1C2 * R2C1;
+            result.R1C2 = a.R1C0 * R0C2 + a.R1C1 * R1C2 + a.R1C2 * R2C2;
+            result.R2C0 = a.R2C0 * R0C0 + a.R2C1 * R1C0 + a.R2C2 * R2C0;
+            result.R2C1 = a.R2C0 * R0C1 + a.R2C1 * R1C1 + a.R2C2 * R2C1;
+            result.R2C2 = a.R2C0 * R0C2 + a.R2C1 * R1C2 + a.R2C2 * R2C2;
         }
 
-        /// <summary>Multiply left matrix times right matrix.</summary>
-        /// <param name="left">The matrix on the matrix side of the equation.</param>
-        /// <param name="right">The matrix on the right side of the equation</param>
-        /// <param name="result">The resulting matrix of the multiplication.</param>
+        /// <summary>Multiply two matrices.</summary>
+        /// <param name="left">The matrix on the left side of the multiplication.</param>
+        /// <param name="right">The matrix on the right side of the multiplication</param>
+        /// <param name="result">The resulting matrix of the multiplication. result = left * right</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void MultiplyBackwards(in Matrix3 left, in Matrix3 right, out Matrix3 result)
+        public static void Multiply(in Matrix3 left, in Matrix3 right, out Matrix3 result)
         {
-            result.R0C0 = right.R0C0 * left.R0C0 + right.R0C1 * left.R1C0 + right.R0C2 * left.R2C0;
-            result.R0C1 = right.R0C0 * left.R0C1 + right.R0C1 * left.R1C1 + right.R0C2 * left.R2C1;
-            result.R0C2 = right.R0C0 * left.R0C2 + right.R0C1 * left.R1C2 + right.R0C2 * left.R2C2;
-            result.R1C0 = right.R1C0 * left.R0C0 + right.R1C1 * left.R1C0 + right.R1C2 * left.R2C0;
-            result.R1C1 = right.R1C0 * left.R0C1 + right.R1C1 * left.R1C1 + right.R1C2 * left.R2C1;
-            result.R1C2 = right.R1C0 * left.R0C2 + right.R1C1 * left.R1C2 + right.R1C2 * left.R2C2;
-            result.R2C0 = right.R2C0 * left.R0C0 + right.R2C1 * left.R1C0 + right.R2C2 * left.R2C0;
-            result.R2C1 = right.R2C0 * left.R0C1 + right.R2C1 * left.R1C1 + right.R2C2 * left.R2C1;
-            result.R2C2 = right.R2C0 * left.R0C2 + right.R2C1 * left.R1C2 + right.R2C2 * left.R2C2;
+            result.R0C0 = left.R0C0 * right.R0C0 + left.R0C1 * right.R1C0 + left.R0C2 * right.R2C0;
+            result.R0C1 = left.R0C0 * right.R0C1 + left.R0C1 * right.R1C1 + left.R0C2 * right.R2C1;
+            result.R0C2 = left.R0C0 * right.R0C2 + left.R0C1 * right.R1C2 + left.R0C2 * right.R2C2;
+            result.R1C0 = left.R1C0 * right.R0C0 + left.R1C1 * right.R1C0 + left.R1C2 * right.R2C0;
+            result.R1C1 = left.R1C0 * right.R0C1 + left.R1C1 * right.R1C1 + left.R1C2 * right.R2C1;
+            result.R1C2 = left.R1C0 * right.R0C2 + left.R1C1 * right.R1C2 + left.R1C2 * right.R2C2;
+            result.R2C0 = left.R2C0 * right.R0C0 + left.R2C1 * right.R1C0 + left.R2C2 * right.R2C0;
+            result.R2C1 = left.R2C0 * right.R0C1 + left.R2C1 * right.R1C1 + left.R2C2 * right.R2C1;
+            result.R2C2 = left.R2C0 * right.R0C2 + left.R2C1 * right.R1C2 + left.R2C2 * right.R2C2;
         }
 
         /// <summary>Multiply matrix times this scalar.</summary>
@@ -955,10 +955,7 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly Box2 TransformBox(in Box2Rotated box)
         {
-            MultiplyBackwards(box.Transform, this, out var c);
-            return c.TransformBox(box.Box);
-            //<todo.eoin restore+fix this. Original line:
-            //return (box.Transform * this).TransformBox(box.Box);
+            return (this * box.Transform).TransformBox(box.Box);
         }
 
         public readonly Box2 TransformBox(in Box2 box)
@@ -1153,16 +1150,13 @@ namespace Robust.Shared.Maths
         /// <summary>Multiply left matrix times right matrix.</summary>
         /// <param name="left">The matrix on the matrix side of the equation.</param>
         /// <param name="right">The matrix on the right side of the equation</param>
-        /// <returns>The resulting matrix of the multiplication.</returns>
-        //todo.eoin restore this, once fixes are reviewed::
-        /*
+        /// <returns>The resulting matrix of the multiplication. result = left * right</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Matrix3 operator *(in Matrix3 left, in Matrix3 right)
         {
-            MultiplyBackwards(in left, in right, out var result);
+            Multiply(in left, in right, out var result);
             return result;
         }
-        */
 
         #endregion
 

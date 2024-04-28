@@ -160,10 +160,7 @@ namespace Robust.Client.UserInterface.CustomControls
             if (Viewport == null)
                 return Matrix3.Identity;
 
-            Matrix3.MultiplyBackwards(Viewport.GetWorldToLocalMatrix(), GetLocalToScreenMatrix(), out var ret);
-            return ret;
-            //<todo.eoin Restore this. Original:
-            //return Viewport.GetWorldToLocalMatrix() * GetLocalToScreenMatrix();
+            return GetLocalToScreenMatrix() * Viewport.GetWorldToLocalMatrix();
         }
 
         public Matrix3 GetLocalToScreenMatrix()
