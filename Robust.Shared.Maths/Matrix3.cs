@@ -766,7 +766,7 @@ namespace Robust.Shared.Maths
         /// <param name="right">The matrix on the right side of the equation</param>
         /// <param name="result">The resulting matrix of the multiplication.</param>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static void Multiply(in Matrix3 left, in Matrix3 right, out Matrix3 result)
+        public static void MultiplyBackwards(in Matrix3 left, in Matrix3 right, out Matrix3 result)
         {
             result.R0C0 = right.R0C0 * left.R0C0 + right.R0C1 * left.R1C0 + right.R0C2 * left.R2C0;
             result.R0C1 = right.R0C0 * left.R0C1 + right.R0C1 * left.R1C1 + right.R0C2 * left.R2C1;
@@ -955,7 +955,10 @@ namespace Robust.Shared.Maths
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public readonly Box2 TransformBox(in Box2Rotated box)
         {
-            return (box.Transform * this).TransformBox(box.Box);
+            MultiplyBackwards(box.Transform, this, out var c);
+            return c.TransformBox(box.Box);
+            //<todo.eoin restore+fix this. Original line:
+            //return (box.Transform * this).TransformBox(box.Box);
         }
 
         public readonly Box2 TransformBox(in Box2 box)
@@ -1151,12 +1154,15 @@ namespace Robust.Shared.Maths
         /// <param name="left">The matrix on the matrix side of the equation.</param>
         /// <param name="right">The matrix on the right side of the equation</param>
         /// <returns>The resulting matrix of the multiplication.</returns>
+        //todo.eoin restore this, once fixes are reviewed::
+        /*
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Matrix3 operator *(in Matrix3 left, in Matrix3 right)
         {
-            Multiply(in left, in right, out var result);
+            MultiplyBackwards(in left, in right, out var result);
             return result;
         }
+        */
 
         #endregion
 
