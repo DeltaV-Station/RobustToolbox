@@ -203,27 +203,21 @@ namespace Robust.Server.GameObjects
         }
 
         /// <inheritdoc />
-        public void SendSystemNetworkMessage(EntityEventArgs message, bool recordReplay = true)
+        public void SendSystemNetworkMessage(EntityEventArgs message, bool recordReplay = true, ZStdCompressionContext? ctx = null)
         {
-            var newMsg = new MsgEntity();
-            newMsg.Type = EntityMessageType.SystemMessage;
-            newMsg.SystemMessage = message;
-            newMsg.SourceTick = _gameTiming.CurTick;
+            var newMsg = new MsgEntity(message, default, _gameTiming.CurTick, CompressionThreshold, ctx ?? CompressionCtx);
 
             if (recordReplay)
                 _replay.RecordServerMessage(message);
 
+            // TODO NetMessage: NetSerialize & compress this message once, instead of once per-client.
             _networkManager.ServerSendToAll(newMsg);
         }
 
         /// <inheritdoc />
-        public void SendSystemNetworkMessage(EntityEventArgs message, INetChannel targetConnection)
+        public void SendSystemNetworkMessage(EntityEventArgs message, INetChannel targetConnection, ZStdCompressionContext? ctx = null)
         {
-            var newMsg = new MsgEntity();
-            newMsg.Type = EntityMessageType.SystemMessage;
-            newMsg.SystemMessage = message;
-            newMsg.SourceTick = _gameTiming.CurTick;
-
+            var newMsg = new MsgEntity(message, default, _gameTiming.CurTick, CompressionThreshold, ctx ?? CompressionCtx);
             _networkManager.ServerSendMessage(newMsg, targetConnection);
         }
 
@@ -269,22 +263,16 @@ namespace Robust.Server.GameObjects
             try
 #endif
             {
-                switch (message.Type)
-                {
-                    case EntityMessageType.SystemMessage:
-                        var msg = message.SystemMessage;
-                        var sessionType = typeof(EntitySessionMessage<>).MakeGenericType(msg.GetType());
-                        var sessionMsg =
-                            Activator.CreateInstance(sessionType, new EntitySessionEventArgs(player), msg)!;
-                        ReceivedSystemMessage?.Invoke(this, msg);
-                        ReceivedSystemMessage?.Invoke(this, sessionMsg);
-                        return;
-                }
+                var msg = message.Event;
+                var sessionType = typeof(EntitySessionMessage<>).MakeGenericType(msg.GetType());
+                var sessionMsg = Activator.CreateInstance(sessionType, new EntitySessionEventArgs(player), msg)!;
+                ReceivedSystemMessage?.Invoke(this, msg);
+                ReceivedSystemMessage?.Invoke(this, sessionMsg);
             }
 #if EXCEPTION_TOLERANCE
             catch (Exception e)
             {
-                _runtimeLog.LogException(e, $"{nameof(DispatchEntityNetworkMessage)}({message.Type})");
+                _runtimeLog.LogException(e, $"{nameof(DispatchEntityNetworkMessage)}");
             }
 #endif
         }

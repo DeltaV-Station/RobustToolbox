@@ -185,24 +185,19 @@ namespace Robust.Client.GameObjects
         }
 
         /// <inheritdoc />
-        public void SendSystemNetworkMessage(EntityEventArgs message, bool recordReplay = true)
+        public void SendSystemNetworkMessage(EntityEventArgs message, bool recordReplay = true, ZStdCompressionContext? ctx = null)
         {
-            SendSystemNetworkMessage(message, default(uint));
+            SendSystemNetworkMessage(message, default(uint), ctx);
         }
 
-        public void SendSystemNetworkMessage(EntityEventArgs message, uint sequence)
+        public void SendSystemNetworkMessage(EntityEventArgs message, uint sequence, ZStdCompressionContext? ctx = null)
         {
-            var msg = new MsgEntity();
-            msg.Type = EntityMessageType.SystemMessage;
-            msg.SystemMessage = message;
-            msg.SourceTick = _gameTiming.CurTick;
-            msg.Sequence = sequence;
-
+            var msg = new MsgEntity(message, sequence, _gameTiming.CurTick, CompressionThreshold, ctx ?? CompressionCtx);
             _networkManager.ClientSendMessage(msg);
         }
 
         /// <inheritdoc />
-        public void SendSystemNetworkMessage(EntityEventArgs message, INetChannel? channel)
+        public void SendSystemNetworkMessage(EntityEventArgs message, INetChannel? channel, ZStdCompressionContext? ctx = null)
         {
             throw new NotSupportedException();
         }
@@ -223,18 +218,11 @@ namespace Robust.Client.GameObjects
 
         private void DispatchReceivedNetworkMsg(MsgEntity message)
         {
-            switch (message.Type)
-            {
-                case EntityMessageType.SystemMessage:
-
-                    // TODO REPLAYS handle late messages.
-                    // If a message was received late, it will be recorded late here.
-                    // Maybe process the replay to prevent late messages when playing back?
-                    _replayRecording.RecordReplayMessage(message.SystemMessage);
-
-                    DispatchReceivedNetworkMsg(message.SystemMessage);
-                    return;
-            }
+            // TODO REPLAYS handle late messages.
+            // If a message was received late, it will be recorded late here.
+            // Maybe process the replay to prevent late messages when playing back?
+            _replayRecording.RecordReplayMessage(message.Event);
+            DispatchReceivedNetworkMsg(message.Event);
         }
 
         public void DispatchReceivedNetworkMsg(EntityEventArgs msg)
