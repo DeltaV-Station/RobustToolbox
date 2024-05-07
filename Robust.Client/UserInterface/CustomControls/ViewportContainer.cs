@@ -160,7 +160,7 @@ namespace Robust.Client.UserInterface.CustomControls
             if (Viewport == null)
                 return Matrix3.Identity;
 
-            return Viewport.GetWorldToLocalMatrix() * GetLocalToScreenMatrix();
+            return GetLocalToScreenMatrix() * Viewport.GetWorldToLocalMatrix();
         }
 
         public Matrix3 GetLocalToScreenMatrix()

@@ -1306,19 +1306,19 @@ namespace Robust.Client.GameObjects
             // However, at some point later the eye-matrix is applied separately, so we subtract -eye rotation for now:
             var entityMatrix = Matrix3.CreateTransform(worldPosition, NoRotation ? -eyeRotation : worldRotation - cardinal);
 
-            Matrix3.Multiply(in LocalMatrix, in entityMatrix, out var transformSprite);
+            Matrix3.Multiply(in entityMatrix, in LocalMatrix, out var transformSprite);
 
             if (GranularLayersRendering)
             {
                 //Default rendering
                 entityMatrix = Matrix3.CreateTransform(worldPosition, worldRotation);
-                Matrix3.Multiply(in LocalMatrix, in entityMatrix, out var transformDefault);
+                Matrix3.Multiply(in entityMatrix, in LocalMatrix, out var transformDefault);
                 //Snap to cardinals
                 entityMatrix = Matrix3.CreateTransform(worldPosition, worldRotation - angle.GetCardinalDir().ToAngle());
-                Matrix3.Multiply(in LocalMatrix, in entityMatrix, out var transformSnap);
+                Matrix3.Multiply(in entityMatrix, in LocalMatrix, out var transformSnap);
                 //No rotation
                 entityMatrix = Matrix3.CreateTransform(worldPosition, -eyeRotation);
-                Matrix3.Multiply(in LocalMatrix, in entityMatrix, out var transformNoRot);
+                Matrix3.Multiply(in entityMatrix, in LocalMatrix, out var transformNoRot);
 
 
                 foreach (var layer in Layers) {
@@ -1970,7 +1970,7 @@ namespace Robust.Client.GameObjects
                     layerDrawMatrix = LocalMatrix;
                 else
                 {
-                    Matrix3.Multiply(in _rsiDirectionMatrices[(int)dir], in LocalMatrix, out layerDrawMatrix);
+                    Matrix3.Multiply(in LocalMatrix, in _rsiDirectionMatrices[(int)dir], out layerDrawMatrix);
                 }
             }
 
@@ -2040,7 +2040,7 @@ namespace Robust.Client.GameObjects
                 if (CopyToShaderParameters == null)
                 {
                     // Set the drawing transform for this layer
-                    Matrix3.Multiply(in layerMatrix, in spriteMatrix, out var transformMatrix);
+                    Matrix3.Multiply(in spriteMatrix, in layerMatrix, out var transformMatrix);
                     drawingHandle.SetTransform(in transformMatrix);
 
                     RenderTexture(drawingHandle, texture);
