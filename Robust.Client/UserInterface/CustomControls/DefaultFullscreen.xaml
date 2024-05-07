@@ -1,0 +1,11 @@
+﻿<DefaultFullscreen xmlns="https://spacestation14.io"
+                   HorizontalAlignment="Stretch"
+                   HorizontalExpand="True"
+                   VerticalAlignment="Stretch"
+                   VerticalExpand="True">
+    <Control Name="ContentsContainer"
+             HorizontalAlignment="Stretch"
+             HorizontalExpand="True"
+             VerticalAlignment="Stretch"
+             VerticalExpand="True"/>
+</DefaultFullscreen>
